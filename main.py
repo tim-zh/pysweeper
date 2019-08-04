@@ -17,6 +17,19 @@ def load_image(file):
     return surface.convert()
 
 
+def load_tileset(file, num_x, num_y):
+    result = []
+    img = load_image(file)
+    width, height = img.get_size()
+    tile_width = width // num_x
+    tile_height = height // num_y
+    for x in range(0, num_x):
+        for y in range(0, num_y):
+            rect = (x * tile_width, y * tile_height, tile_width, tile_height)
+            result.append(img.subsurface(rect))
+    return result
+
+
 def main():
     pygame.init()
     winstyle = 0  # FULLSCREEN
@@ -24,7 +37,7 @@ def main():
     screen = pygame.display.set_mode(SCREENRECT.size, winstyle, bestdepth)
     pygame.display.set_caption('py sweeper')
 
-    bgdtile = load_image('sprite.png')
+    bgdtile = load_tileset('cells.png', 9, 2)[1]
     background = pygame.Surface(SCREENRECT.size)
     for x in range(0, SCREENRECT.width, bgdtile.get_width()):
         for y in range(0, SCREENRECT.height, bgdtile.get_height()):
