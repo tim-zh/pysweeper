@@ -39,7 +39,7 @@ class Cell(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self, self.containers)
         self.neighbor_mines = 0
         self.is_mine = False
-        self._is_open = False
+        self.is_open = False
         self.type = 12
         self.image = self.images[self.type]
         self.rect = self.image.get_rect()
@@ -47,7 +47,7 @@ class Cell(pygame.sprite.Sprite):
         self.rect.top = y * Cell.tile_height
 
     def open(self):
-        self._is_open = True
+        self.is_open = True
         if self.is_mine:
             self.type = 10
         else:
@@ -80,15 +80,32 @@ class MineField:
     def contains(self, x, y):
         return 0 <= x < self.num_x and 0 <= y < self.num_y
 
+    def get_neighbors(self, x, y):
+        result = []
+        for dy in range(-1, 2):
+            for dx in range(-1, 2):
+                if self.contains(x + dx, y + dy) and not (dx == 0 and dy == 0):
+                    xy = (x + dx, y + dy)
+                    result.append(xy)
+        return result
+
+    def get_cell(self, xy):
+        return self.cells[xy[0]][xy[1]]
+
     def calculate_types(self):
         for x in range(0, self.num_x):
             for y in range(0, self.num_y):
-                for dx in range(-1, 2):
-                    for dy in range(-1, 2):
-                        if self.contains(x + dx, y + dy) and self.cells[x + dx][y + dy].is_mine:
-                            self.cells[x][y].neighbor_mines += 1
-                if self.cells[x][y].is_mine:
-                    self.cells[x][y].neighbor_mines -= 1
+                for xy in self.get_neighbors(x, y):
+                    cell = self.get_cell(xy)
+                    if cell.is_mine:
+                        self.cells[x][y].neighbor_mines += 1
+
+    def open(self, x, y):
+        self.cells[x][y].open()
+        if self.cells[x][y].neighbor_mines == 0:
+            for xy in self.get_neighbors(x, y):
+                if not self.get_cell(xy).is_open:
+                    self.open(xy[0], xy[1])
 
 
 def main():
@@ -121,7 +138,7 @@ def main():
                 pos_x, pos_y = pygame.mouse.get_pos()
                 x = math.floor(pos_x / Cell.tile_width)
                 y = math.floor(pos_y / Cell.tile_height)
-                field.cells[x][y].open()
+                field.open(x, y)
 
         cells_group.update()
         dirty = cells_group.draw(screen)
