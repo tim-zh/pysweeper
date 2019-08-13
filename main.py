@@ -37,6 +37,7 @@ class Cell(pygame.sprite.Sprite):
 
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self, self.containers)
+        self.neighbor_mines = 0
         self.is_mine = False
         self._is_open = False
         self.type = 12
@@ -50,7 +51,7 @@ class Cell(pygame.sprite.Sprite):
         if self.is_mine:
             self.type = 10
         else:
-            self.type = 0
+            self.type = self.neighbor_mines
 
     def update(self):
         self.image = self.images[self.type]
@@ -76,6 +77,19 @@ class MineField:
                     self.cells[x][y].is_mine = True
                     break
 
+    def contains(self, x, y):
+        return 0 <= x < self.num_x and 0 <= y < self.num_y
+
+    def calculate_types(self):
+        for x in range(0, self.num_x):
+            for y in range(0, self.num_y):
+                for dx in range(-1, 2):
+                    for dy in range(-1, 2):
+                        if self.contains(x + dx, y + dy) and self.cells[x + dx][y + dy].is_mine:
+                            self.cells[x][y].neighbor_mines += 1
+                if self.cells[x][y].is_mine:
+                    self.cells[x][y].neighbor_mines -= 1
+
 
 def main():
     pygame.init()
@@ -93,6 +107,7 @@ def main():
     Cell.tile_height = Cell.images[0].get_height()
     field = MineField(9, 9)
     field.place_mines(10)
+    field.calculate_types()
     screen_rect = (field.num_x * Cell.tile_width, field.num_y * Cell.tile_height)
     screen = pygame.display.set_mode(screen_rect, winstyle, bestdepth)
 
