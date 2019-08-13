@@ -1,5 +1,6 @@
 import os
 import math
+import random
 import pygame
 from pygame.locals import *
 
@@ -36,6 +37,7 @@ class Cell(pygame.sprite.Sprite):
 
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self, self.containers)
+        self.is_mine = False
         self._is_open = False
         self.type = 12
         self.image = self.images[self.type]
@@ -45,7 +47,10 @@ class Cell(pygame.sprite.Sprite):
 
     def open(self):
         self._is_open = True
-        self.type = 0
+        if self.is_mine:
+            self.type = 10
+        else:
+            self.type = 0
 
     def update(self):
         self.image = self.images[self.type]
@@ -61,6 +66,15 @@ class MineField:
             for y in range(0, num_y):
                 row.append(Cell(x, y))
             self.cells.append(row)
+
+    def place_mines(self, num):
+        for i in range(0, num):
+            while True:
+                x = random.randrange(0, self.num_x)
+                y = random.randrange(0, self.num_y)
+                if not self.cells[x][y].is_mine:
+                    self.cells[x][y].is_mine = True
+                    break
 
 
 def main():
@@ -78,6 +92,7 @@ def main():
     Cell.tile_width = Cell.images[0].get_width()
     Cell.tile_height = Cell.images[0].get_height()
     field = MineField(9, 9)
+    field.place_mines(10)
     screen_rect = (field.num_x * Cell.tile_width, field.num_y * Cell.tile_height)
     screen = pygame.display.set_mode(screen_rect, winstyle, bestdepth)
 
